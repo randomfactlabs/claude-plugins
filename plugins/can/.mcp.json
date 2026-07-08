@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "can": {
+      "type": "http",
+      "url": "https://mcp.can.randomfact.com"
+    }
+  }
+}
