@@ -11,7 +11,7 @@ rename it without updating that expectation.
 
 | Command | What it does |
 | :------ | :----------- |
-| `/can:pr [CAN-123]` | Opens a pull request for the current Can ticket. |
+| `/can:pr [CAN-123]` | Takes a Can ticket and drives it to a PR — reads it, implements the change on a branch, tests it, and opens the pull request. |
 
 ## Bundled MCP server
 
