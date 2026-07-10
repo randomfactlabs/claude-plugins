@@ -7,7 +7,7 @@
     {
       "name": "can",
       "source": "./plugins/can",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "description": "Slash commands for the Can kanban workflow, plus the hosted Can MCP server.",
       "keywords": ["kanban", "can", "randomfact", "mcp"]
     }
