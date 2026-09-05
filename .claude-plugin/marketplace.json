@@ -1,15 +1,22 @@
 {
   "name": "randomfactlabs",
-  "owner": { "name": "RandomFact Labs" },
+  "owner": {
+    "name": "RandomFact Labs"
+  },
   "version": "1.0.0",
   "description": "Claude Code plugins for the RandomFact product suite.",
   "plugins": [
     {
       "name": "can",
       "source": "./plugins/can",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "description": "Slash commands for the Can kanban workflow, plus the hosted Can MCP server.",
-      "keywords": ["kanban", "can", "randomfact", "mcp"]
+      "keywords": [
+        "kanban",
+        "can",
+        "randomfact",
+        "mcp"
+      ]
     }
   ]
 }

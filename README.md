@@ -10,7 +10,7 @@ plugin sits in its own subdirectory under [`plugins/`](plugins/).
 
 | Plugin | Description |
 | :----- | :---------- |
-| [`can`](plugins/can) | Slash commands for the Can kanban workflow (`/can:pr`, …), bundling the hosted Can MCP server. |
+| [`can`](plugins/can) | Slash commands for the Can kanban workflow (`/can:pr`, `/can:deliver`), bundling the hosted Can MCP server. |
 
 ## Install
 
@@ -54,8 +54,10 @@ claude-plugins/
         │   └── plugin.json     # plugin manifest
         ├── .mcp.json           # bundled Can MCP server registration
         └── skills/
-            └── pr/
-                └── SKILL.md     # /can:pr
+            ├── pr/
+            │   └── SKILL.md     # /can:pr
+            └── deliver/
+                └── SKILL.md     # /can:deliver
 ```
 
 Manifests live in `.claude-plugin/`; everything else (`skills/`, `.mcp.json`)

@@ -12,6 +12,7 @@ rename it without updating that expectation.
 | Command | What it does |
 | :------ | :----------- |
 | `/can:pr [CAN-123]` | Takes a Can ticket and drives it to a PR — reads it, implements the change on a branch, tests it, and opens the pull request. |
+| `/can:deliver [BOARD] [column]` | Delivers every ticket in one column (default `To Do`): takes them, fans out one worktree subagent per ticket (Sonnet or Opus by ticket shape), reviews and merges each PR, files findings as new tickets, and summarizes. Never deploys. |
 
 ## Bundled MCP server
 
