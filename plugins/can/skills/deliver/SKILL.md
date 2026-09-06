@@ -1,12 +1,13 @@
 ---
-description: Deliver every ticket in one column of a Can board — take them, fan out one worktree subagent per ticket (Sonnet for well-specified work, Opus for refactors), review and merge each PR, turn findings into new tickets, and summarize. Use when asked to "deliver / clear / work through everything in To Do". Invoke as /can:deliver [BOARD] [column].
+description: Deliver every ticket in one column of a Can board — take them, fan out one worktree subagent per ticket (Sonnet for well-specified work, Opus for refactors), review and merge each PR, fix small findings in the PR and ticket the rest, and summarize. Use when asked to "deliver / clear / work through everything in To Do". Invoke as /can:deliver [BOARD] [column].
 ---
 
 # /can:deliver
 
 Manage the delivery of every ticket in one column of a Can board, end to end:
 **take the tickets, implement each on its own branch through a subagent, review
-and merge each PR yourself, file what you learn as new tickets, and report.**
+and merge each PR yourself, fix the small things you find in the PR and file the
+rest as tickets, and report.**
 You are the delivery manager, not the implementer — the subagents write the
 code; you own the board, the review, the merge order and the summary.
 
@@ -99,12 +100,19 @@ Each brief must carry, explicitly:
   `<KEY>: …` commit-subject convention, and a PR body with approach, key
   decisions and testing.
 - **The report format:** PR URL, branch, worktree path, what was verified,
-  what could *not* be verified, and **findings outside the ticket's scope as a
-  separate list** so you can file tickets.
+  what could *not* be verified, the **nits it fixed along the way**, and
+  **findings outside the ticket's scope that it did not fix** as a separate
+  list, each saying why it was too big or too far from the PR to fix there.
 
 Tell each agent it may fix an incidental breakage its change causes (a test
-that relied on the old behavior), but must call it out; anything else
-out-of-scope is a finding, not a fix.
+that relied on the old behavior), and that **small findings are fixed, not
+reported**: a nit in a file the PR already touches — a stale comment, a
+duplicated type, a missing `useMemo`, an escape-hatch cast, a wrong count in a
+doc string — roughly twenty lines or fewer, with no behaviour change a user
+would notice — goes in its own commit, called out in the PR body under "Also
+fixed", so a pure-move diff stays verifiable region by region. Only what is
+genuinely too big for that, or lives in files the PR is not already in, is a
+finding for the report.
 
 ## 4. While they run — do the orchestrator's homework
 
@@ -132,13 +140,17 @@ Never merge on the agent's report alone. For each PR, in order:
      the output, not just the exit code (open regenerated images; diff
      regenerated files against the committed ones).
    - **Incidental fixes** and whether they belong in this PR.
-   - **Findings the agent buried** in the PR body that need a ticket.
+   - **Findings the agent reported instead of fixing.** If one is small by the
+     rule above, fix it yourself in the worktree now (step 3) rather than
+     filing it; only what is genuinely too big or too far from the PR needs a
+     ticket.
 2. **Rebase onto the current default branch** if another PR merged since the
    branch was cut (`git rebase main` in the agent's worktree), and **re-run the
    checks on the rebased result** — typecheck, tests, build — before merging.
-3. **Make small corrections directly in the worktree** and commit them with the
-   session's trailers; re-spawn or message the agent only for substantial
-   rework. Update the PR body with a short "review" section explaining what
+3. **Make small corrections directly in the worktree** — your review fixes and
+   any small finding the agent reported instead of fixing — and commit them
+   with the session's trailers; re-spawn or message the agent only for
+   substantial rework. Update the PR body with a short "review" section explaining what
    you changed and why.
 4. **Squash-merge** with the subject `<KEY>: <title> (#<PR>)`, then
    `git pull --ff-only` on the main checkout.
@@ -152,11 +164,18 @@ Never merge on the agent's report alone. For each PR, in order:
 
 Small PRs merge as they land; the broad one waits for the others and rebases.
 
-## 6. Findings become tickets, not silence
+## 6. Small findings are fixed; the rest become tickets, not silence
 
 Every out-of-scope finding — from an agent's report, from your review, from
-your own verification — is either **incorporated** (small, in scope, and the
-ticket's acceptance is better for it) or **filed**:
+your own verification — is either **fixed in the PR** or **filed**, and fixed
+is the default. Nits are fixed, not ticketed: if it is roughly twenty lines or
+fewer, sits in a file the PR already touches, and changes no behaviour a user
+would notice, it goes into the PR now — by the agent in its own commit, or by
+you in the worktree during review — and is called out in the PR body. A batch
+that files a ticket for every nit it meets creates as many tickets as it
+delivers, and the next run inherits them. File a ticket only for what is
+genuinely too big or too far from the PR to fix in it, a decision the user
+must make, or a regression:
 
 - Product/app follow-ups go on **the same board**, in the column you are
   clearing, so the next run picks them up.
@@ -185,7 +204,9 @@ one summary that stands alone:
   default branch after your post-merge install/typecheck/test run.
 - **Review calls the user should eyeball** — every judgment you made on their
   behalf (copy restored, copy rewritten, an incidental fix kept).
-- **Findings → tickets**, grouped by board, the regression first.
+- **Nits fixed in-PR** — one line each, with the PR they landed in.
+- **Findings → tickets**, grouped by board, the regression first — only what
+  was too big or too far from a PR to fix in it.
 - **Verified but not committed** — anything you ran and deliberately threw
   away, and why.
 - **Next step for the user** — the release, and any ticket that should land

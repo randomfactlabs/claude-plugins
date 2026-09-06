@@ -1,7 +1,7 @@
 {
   "name": "can",
   "description": "Slash commands for the Can kanban workflow (/can:pr, /can:deliver), bundling the hosted Can MCP server.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "author": {
     "name": "Don"
   }
