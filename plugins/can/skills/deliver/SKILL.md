@@ -31,8 +31,10 @@ defaults to `To Do` and is matched case-insensitively by name.
 
 ## 1. Inventory before you touch anything
 
-1. `list_tickets` with `columnName` for the target column, and `list_columns`
-   once for the `in-progress` and `done` column ids.
+1. `list_tickets` with `columnName` for the target column and `view: "full"`
+   — step 3 briefs each agent with the ticket verbatim, so fetch the bodies
+   here, not with a `get_ticket` per ticket. Then `list_columns` once for the
+   `in-progress` and `done` column ids.
 2. **Read every ticket's comments** (`list_comments`). Unblock notes ("0.1.5 is
    published now"), corrections and prior attempts live there, not in the
    description.
@@ -62,7 +64,8 @@ For each ticket: `update_ticket` with `agentAssigneeId` set to your agent slug
 (`claude`), then `assign_self` (records the signed-in human). Then one
 `bulk_status_tickets` call moving all of them to the `in-progress` column.
 If a ticket already has a *different* `agentAssigneeId`, leave it alone and say
-so in the summary.
+so in the summary. A write's reply is a ~230-byte summary and is the
+confirmation; never follow a write with a `get_ticket`.
 
 ## 3. Fan out — one subagent per ticket, in parallel
 
@@ -156,9 +159,9 @@ Never merge on the agent's report alone. For each PR, in order:
    `git pull --ff-only` on the main checkout.
 5. **Comment on the ticket**: PR URL + merge sha, what changed, what was
    verified, what was deliberately not done, the follow-up tickets filed.
-6. **Move the ticket to `done`** — merged is accepted. If acceptance includes a
-   post-deploy check, say in the comment that it is verified on the next
-   release.
+6. **Move the ticket to `done`** — merged is accepted; the returned summary
+   is the confirmation. If acceptance includes a post-deploy check, say in the
+   comment that it is verified on the next release.
 7. **Clean up:** `git worktree remove --force <path>`, delete the local and
    remote branch, `git worktree prune`.
 
@@ -197,8 +200,8 @@ stop. Say in the summary exactly what the next release will verify.
 ## 8. Confirm the board, then summarize
 
 `list_tickets` the target column once more (it should hold only the follow-ups
-you filed) and `get_ticket` each delivered key to confirm `done`. Then write
-one summary that stands alone:
+you filed) — no `get_ticket` per delivered key; each done-move's summary
+already carried its `columnId`. Then write one summary that stands alone:
 
 - A table: ticket, model, PR, one line on what it does; then the state of the
   default branch after your post-merge install/typecheck/test run.
