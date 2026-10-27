@@ -31,24 +31,37 @@ defaults to `To Do` and is matched case-insensitively by name.
 
 ## 1. Inventory before you touch anything
 
-1. `list_tickets` with `columnName` for the target column and `view: "full"`
-   — step 3 briefs each agent with the ticket verbatim, so fetch the bodies
-   here, not with a `get_ticket` per ticket. Then `list_columns` once for the
-   `in-progress` and `done` column ids.
-2. **Read every ticket's comments** (`list_comments`). Unblock notes ("0.1.5 is
+1. `list_tickets` with `columnName` for the target column, then `get_ticket`
+   each key once: the reply carries the body that step 3 briefs verbatim *and*
+   the ticket's `links`, which lists never carry. Then `list_columns` once for
+   the `in-progress` and `done` column ids.
+2. **Check each ticket's linked PRs.** A `github` / `pull_request` link is a PR
+   already made for the ticket, and its `state` stays in sync when the
+   workspace has GitHub connected:
+   - `open` or `draft`: **already in review.** Don't spawn an implementer. Take
+     the ticket, then review and merge that PR in step 5, as if an agent had
+     just reported it. Do any fixes in a worktree on its branch (`gh pr
+     checkout <url>`). If it needs real rework, brief an agent to continue
+     that branch rather than open a second PR.
+   - `merged`: **already shipped.** Don't take it or redo it. Confirm it's in
+     a `done` column (the done-on-merge rule usually moved it), move it if
+     not, and list it in the summary.
+   - `closed` (unmerged): an abandoned attempt. Implement it fresh, and give
+     the agent the closed PR's URL so it can see what was tried.
+3. **Read every ticket's comments** (`list_comments`). Unblock notes ("0.1.5 is
    published now"), corrections and prior attempts live there, not in the
    description.
-3. **Verify external prerequisites the tickets assert.** A ticket that says a
+4. **Verify external prerequisites the tickets assert.** A ticket that says a
    package version "is published" or another repo's PR "has merged" is a claim
    — check the registry (`pnpm view <pkg> versions`), the sibling repo on
    disk, the referenced file. A ticket whose prerequisite is genuinely missing
    stays in the column with a comment saying why; don't start it.
-4. **Map the tickets onto each other.** Which ones touch the same files
+5. **Map the tickets onto each other.** Which ones touch the same files
    (`package.json`, lockfiles, `CLAUDE.md`, a shared route)? Which one's
    acceptance references another's output (a heading, a script, a constant)?
    Decide the **merge order** now: small, self-contained PRs first; the one
    with the broadest footprint last, rebased onto everything else.
-5. **Pick a model per ticket.**
+6. **Pick a model per ticket.**
    - **Sonnet** when the ticket is well specified and mechanical: it hands you
      the exact code, the exact commands, or a scaffold to copy; the judgment is
      in the ticket, not the work.
@@ -159,9 +172,20 @@ Never merge on the agent's report alone. For each PR, in order:
    `git pull --ff-only` on the main checkout.
 5. **Comment on the ticket**: PR URL + merge sha, what changed, what was
    verified, what was deliberately not done, the follow-up tickets filed.
-6. **Move the ticket to `done`** — merged is accepted; the returned summary
-   is the confirmation. If acceptance includes a post-deploy check, say in the
-   comment that it is verified on the next release.
+6. **See the ticket to `done`** — merged is accepted. In a GitHub-connected
+   workspace the merge moves it: the PR linked itself from the key in its
+   title, and the done-on-merge rule moves the ticket once every linked PR is
+   merged or closed. `get_ticket` once:
+   - The link is `merged` and the ticket is in a `done` column: nothing to do.
+   - The link is still `open`: the webhook hasn't arrived yet. Check again
+     shortly.
+   - The link is `merged` but the ticket hasn't moved (no connection, the rule
+     is off, or another linked PR is still open): `update_ticket` it to
+     `done` yourself, if accepting it is right. The returned summary is the
+     confirmation.
+
+   If acceptance includes a post-deploy check, say in the comment that it is
+   verified on the next release.
 7. **Clean up:** `git worktree remove --force <path>`, delete the local and
    remote branch, `git worktree prune`.
 
@@ -200,8 +224,8 @@ stop. Say in the summary exactly what the next release will verify.
 ## 8. Confirm the board, then summarize
 
 `list_tickets` the target column once more (it should hold only the follow-ups
-you filed) — no `get_ticket` per delivered key; each done-move's summary
-already carried its `columnId`. Then write one summary that stands alone:
+you filed) — no `get_ticket` per delivered key; step 5.6 already confirmed
+each one's column. Then write one summary that stands alone:
 
 - A table: ticket, model, PR, one line on what it does; then the state of the
   default branch after your post-merge install/typecheck/test run.
